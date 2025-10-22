@@ -375,7 +375,8 @@ namespace Tanks.Complete
             float moveAmount = Mathf.Clamp01(orientDot) * m_Movement.m_Speed * Time.deltaTime;
             if (m_IsMoving && moveAmount > 0.000001f)
             {
-                rb.MovePosition(rb.position + forward * moveAmount);
+                // rb.MovePosition(rb.position + forward * moveAmount);
+                rb.linearVelocity = Mathf.Clamp01(orientDot) * m_Movement.m_Speed * forward + m_Movement.ExplosionForceValue;
             }
 
             //the actual rotation for that frame is the smallest between the max turning speed for that time frame and the

@@ -25,8 +25,9 @@ namespace Tanks.Complete
         public bool m_IsComputerControlled = false; // Is this tank player or computer controlled
         [HideInInspector]
         public TankInputUser m_InputUser;            // The Input User component for that tanks. Contains the Input Actions.
-        
+
         public Rigidbody Rigidbody => m_Rigidbody;
+        public Vector3 ExplosionForceValue => m_ExplosionForceValue;
         
         public int ControlIndex { get; set; } = -1; //this define the index of the control 1 = left keyboard or pad, 2 = right keyboard, -1 = no control
         
@@ -240,7 +241,6 @@ namespace Tanks.Complete
             {
                 // in normal "tank control" the speed value is how much we press "up/forward"
                 speedInput = m_MovementInputValue;
-                Debug.Log("speed: " + speedInput.ToString());
             }
             
             // Create a vector in the direction the tank is facing with a magnitude based on the input, speed and the time between frames.
@@ -248,6 +248,7 @@ namespace Tanks.Complete
 
             // Apply this movement to the rigidbody's position.
             m_Rigidbody.linearVelocity = movement + m_ExplosionForceValue;
+            // m_Rigidbody.MovePosition(m_Rigidbody.position + (movement + m_ExplosionForceValue) * Time.deltaTime);
             m_ExplosionForceValue = Vector3.Lerp(m_ExplosionForceValue, Vector3.zero, Time.deltaTime * 3f); // 3f = braking speed
         }
 
