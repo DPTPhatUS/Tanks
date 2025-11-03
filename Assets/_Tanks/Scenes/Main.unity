@@ -685,12 +685,20 @@ PrefabInstance:
       propertyPath: m_Name
       value: Tank_Heavy
       objectReference: {fileID: 0}
+    - target: {fileID: 2688612367597824154, guid: 19673d8235914530dabc03e1033dd8a9, type: 3}
+      propertyPath: m_MinLaunchForce
+      value: 5
+      objectReference: {fileID: 0}
     - target: {fileID: 6435628953248919362, guid: 19673d8235914530dabc03e1033dd8a9, type: 3}
       propertyPath: m_PlayerNumber
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6435628953248919362, guid: 19673d8235914530dabc03e1033dd8a9, type: 3}
       propertyPath: m_IsComputerControlled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6441672625121816234, guid: 19673d8235914530dabc03e1033dd8a9, type: 3}
+      propertyPath: m_FillAmount
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8242444096187267332, guid: 19673d8235914530dabc03e1033dd8a9, type: 3}
@@ -737,6 +745,10 @@ PrefabInstance:
       propertyPath: m_AnchorMax.x
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8983876951412607112, guid: 19673d8235914530dabc03e1033dd8a9, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -752,7 +764,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 333994291990148989, guid: fd159a51f678b50368fa1bf533f8f097, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 1
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 333994291990148989, guid: fd159a51f678b50368fa1bf533f8f097, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 751178960302360305, guid: fd159a51f678b50368fa1bf533f8f097, type: 3}
       propertyPath: m_LocalPosition.x
@@ -802,21 +818,25 @@ PrefabInstance:
       propertyPath: m_IsComputerControlled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 2407976006019076447, guid: fd159a51f678b50368fa1bf533f8f097, type: 3}
+      propertyPath: m_FillAmount
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7051789054131340671, guid: fd159a51f678b50368fa1bf533f8f097, type: 3}
       propertyPath: m_Name
       value: Tank_Shark
       objectReference: {fileID: 0}
     - target: {fileID: 7051789054131340671, guid: fd159a51f678b50368fa1bf533f8f097, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8296106348457288960, guid: fd159a51f678b50368fa1bf533f8f097, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8296106348457288960, guid: fd159a51f678b50368fa1bf533f8f097, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
