@@ -1528,8 +1528,8 @@ MonoBehaviour:
   m_CameraControl: {fileID: 81738338}
   m_Tank1Prefab: {fileID: 1860917642604100234, guid: 19673d8235914530dabc03e1033dd8a9, type: 3}
   m_Tank2Prefab: {fileID: 1860917642604100234, guid: 19673d8235914530dabc03e1033dd8a9, type: 3}
-  m_Tank3Prefab: {fileID: 7051789054131340671, guid: fd159a51f678b50368fa1bf533f8f097, type: 3}
-  m_Tank4Prefab: {fileID: 7051789054131340671, guid: fd159a51f678b50368fa1bf533f8f097, type: 3}
+  m_Tank3Prefab: {fileID: 7661227305553158702, guid: 41cfbd6e8866303bf9b8473e232c3ec5, type: 3}
+  m_Tank4Prefab: {fileID: 709565381808770751, guid: 570eed6adc1215069a5888f47b896b32, type: 3}
   m_SpawnPoints:
   - m_PlayerColor: {r: 0, g: 0, b: 0, a: 0}
     m_SpawnPoint: {fileID: 779312960}
@@ -1584,11 +1584,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 805584338542975733, guid: 19673d8235914530dabc03e1033dd8a9, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 805584338542975733, guid: 19673d8235914530dabc03e1033dd8a9, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1860917642604100234, guid: 19673d8235914530dabc03e1033dd8a9, type: 3}
       propertyPath: m_Name
@@ -1640,7 +1640,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8983876951412607112, guid: 19673d8235914530dabc03e1033dd8a9, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1657,7 +1657,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 333994291990148989, guid: fd159a51f678b50368fa1bf533f8f097, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 751178960302360305, guid: fd159a51f678b50368fa1bf533f8f097, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1709,11 +1709,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8296106348457288960, guid: fd159a51f678b50368fa1bf533f8f097, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8296106348457288960, guid: fd159a51f678b50368fa1bf533f8f097, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
