@@ -66,7 +66,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2624997605631707112, guid: f54de357bd99b25c4b5e5d2c5f5d49bd, type: 3}
       propertyPath: m_Speed
-      value: 14
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 5104409010483370650, guid: f54de357bd99b25c4b5e5d2c5f5d49bd, type: 3}
       propertyPath: m_LocalPosition.z
@@ -76,29 +76,45 @@ PrefabInstance:
       propertyPath: m_Value
       value: 5
       objectReference: {fileID: 0}
+    - target: {fileID: 5839682574965187366, guid: f54de357bd99b25c4b5e5d2c5f5d49bd, type: 3}
+      propertyPath: m_Size.y
+      value: 1.9773784
+      objectReference: {fileID: 0}
+    - target: {fileID: 5839682574965187366, guid: f54de357bd99b25c4b5e5d2c5f5d49bd, type: 3}
+      propertyPath: m_Size.z
+      value: 2.0469453
+      objectReference: {fileID: 0}
+    - target: {fileID: 5839682574965187366, guid: f54de357bd99b25c4b5e5d2c5f5d49bd, type: 3}
+      propertyPath: m_Center.y
+      value: 0.8691255
+      objectReference: {fileID: 0}
+    - target: {fileID: 5839682574965187366, guid: f54de357bd99b25c4b5e5d2c5f5d49bd, type: 3}
+      propertyPath: m_Center.z
+      value: 0.0021096468
+      objectReference: {fileID: 0}
     - target: {fileID: 6015152305780822989, guid: f54de357bd99b25c4b5e5d2c5f5d49bd, type: 3}
       propertyPath: m_LocalPosition.z
       value: -0.95
       objectReference: {fileID: 0}
     - target: {fileID: 6372014792694087728, guid: f54de357bd99b25c4b5e5d2c5f5d49bd, type: 3}
       propertyPath: m_MaxDamage
-      value: 50
-      objectReference: {fileID: 0}
-    - target: {fileID: 6372014792694087728, guid: f54de357bd99b25c4b5e5d2c5f5d49bd, type: 3}
-      propertyPath: m_ShotCooldown
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 6372014792694087728, guid: f54de357bd99b25c4b5e5d2c5f5d49bd, type: 3}
-      propertyPath: m_MaxChargeTime
-      value: 1
+      value: 80
       objectReference: {fileID: 0}
     - target: {fileID: 6475995587427518002, guid: f54de357bd99b25c4b5e5d2c5f5d49bd, type: 3}
       propertyPath: m_StartingHealth
-      value: 150
+      value: 200
       objectReference: {fileID: 0}
     - target: {fileID: 7273702320794210848, guid: f54de357bd99b25c4b5e5d2c5f5d49bd, type: 3}
       propertyPath: m_Name
       value: Tank_Alternative Variant
+      objectReference: {fileID: 0}
+    - target: {fileID: 8506224054092165727, guid: f54de357bd99b25c4b5e5d2c5f5d49bd, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8506224054092165727, guid: f54de357bd99b25c4b5e5d2c5f5d49bd, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
