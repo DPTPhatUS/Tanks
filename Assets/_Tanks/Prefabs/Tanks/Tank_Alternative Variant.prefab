@@ -98,7 +98,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6372014792694087728, guid: f54de357bd99b25c4b5e5d2c5f5d49bd, type: 3}
       propertyPath: m_MaxDamage
-      value: 160
+      value: 80
       objectReference: {fileID: 0}
     - target: {fileID: 6475995587427518002, guid: f54de357bd99b25c4b5e5d2c5f5d49bd, type: 3}
       propertyPath: m_StartingHealth
