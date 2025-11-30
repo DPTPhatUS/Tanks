@@ -39,13 +39,22 @@ namespace Tanks.Complete
         private bool m_IsMoving = false;
 
         private GameObject[] m_AllTanks;
+        private NavMeshPath[] m_CachedPaths;  // Reusable path array to avoid allocations
+        private Transform m_Transform;         // Cached transform reference
 
         private State m_CurrentState = State.Seek;
+        
+        // Squared distance thresholds for optimization (avoid sqrt)
+        private const float CLOSE_DISTANCE_SQR = 9.0f;      // 3.0f squared
+        private const float CORNER_REACH_SQR = 0.25f;       // 0.5f squared
+        private const float MOVEMENT_THRESHOLD_SQR = 0.000001f;
 
         private void Awake()
         {
             if(!isActiveAndEnabled)
                 return;
+            
+            m_Transform = transform;  // Cache transform reference
             
             m_Movement = GetComponent<TankMovement>();
             m_Shooting = GetComponent<TankShooting>();
@@ -55,14 +64,27 @@ namespace Tanks.Complete
             
             m_PathfindTime = Random.Range(0.3f, 0.6f);
             
-            m_MaxShootingDistance = Vector3.Distance(m_Shooting.GetProjectilePosition(1.0f), transform.position);
+            m_MaxShootingDistance = Vector3.Distance(m_Shooting.GetProjectilePosition(1.0f), m_Transform.position);
             
             m_AllTanks = FindObjectsByType<TankMovement>(FindObjectsInactive.Exclude, FindObjectsSortMode.None).Select(e => e.gameObject).ToArray();
+            InitializePathCache();
+        }
+        
+        private void InitializePathCache()
+        {
+            // Pre-allocate path array to avoid GC allocations during gameplay
+            int maxTanks = m_AllTanks != null ? m_AllTanks.Length : 8;
+            m_CachedPaths = new NavMeshPath[maxTanks];
+            for (int i = 0; i < m_CachedPaths.Length; i++)
+            {
+                m_CachedPaths[i] = new NavMeshPath();
+            }
         }
 
         public void Setup(GameManager manager)
         {
             m_AllTanks = manager.m_SpawnPoints.Select(e => e.m_Instance).ToArray();
+            InitializePathCache();
         }
 
         public void TurnOff()
@@ -93,33 +115,30 @@ namespace Tanks.Complete
             if (m_PathfindTimer > m_PathfindTime)
             {
                 m_PathfindTimer = 0;
-
-                NavMeshPath[] paths = new NavMeshPath[m_AllTanks.Length];
                 
                 float shortestPath = float.MaxValue;
                 int usedPath = -1;
                 Transform target = null;
+                Vector3 myPosition = m_Transform.position;
                 
-                for (var i = 0; i < m_AllTanks.Length; i++)
+                for (int i = 0; i < m_AllTanks.Length; i++)
                 {
-                    var tank = m_AllTanks[i].gameObject;
+                    var tankObj = m_AllTanks[i];
 
-                    if (tank == gameObject)
-                        continue;
-                    
-                    if(tank == null || !tank.activeInHierarchy)
+                    if (tankObj == null || !tankObj.activeInHierarchy || tankObj == gameObject)
                         continue;
 
-                    paths[i] = new NavMeshPath();
+                    // Reuse cached path instead of allocating new one
+                    m_CachedPaths[i].ClearCorners();
 
-                    if (NavMesh.CalculatePath(transform.position, tank.transform.position, ~0, paths[i]))
+                    if (NavMesh.CalculatePath(myPosition, tankObj.transform.position, ~0, m_CachedPaths[i]))
                     {
-                        float length = GetPathLength(paths[i]);
-                        if (shortestPath > length)
+                        float length = GetPathLength(m_CachedPaths[i]);
+                        if (length < shortestPath)
                         {
                             usedPath = i;
                             shortestPath = length;
-                            target = tank.transform;
+                            target = tankObj.transform;
                         }
                     }
                 }
@@ -132,20 +151,18 @@ namespace Tanks.Complete
                         m_LastTargetPosition = m_CurrentTarget.position;
                     }
 
-                    m_CurrentTarget = target;
-                    m_CurrentPath = paths[usedPath];
+                    m_CurrentPath = m_CachedPaths[usedPath];
                     m_CurrentCorner = 1;
                     m_IsMoving = true;
                 }
-
-               
             }
 
             if (m_CurrentTarget != null)
             {
-                float targetMovement = Vector3.Distance(m_CurrentTarget.position, m_LastTargetPosition);
+                Vector3 targetPos = m_CurrentTarget.position;
+                float targetMovementSqr = (targetPos - m_LastTargetPosition).sqrMagnitude;
 
-                if (targetMovement < 0.001f)
+                if (targetMovementSqr < MOVEMENT_THRESHOLD_SQR)
                 {
                     m_TimeSinceLastTargetMove += Time.deltaTime;
                 }
@@ -154,15 +171,16 @@ namespace Tanks.Complete
                     m_TimeSinceLastTargetMove = 0;
                 }
 
-                m_LastTargetPosition = m_CurrentTarget.position;
+                m_LastTargetPosition = targetPos;
                 
-                Vector3 toTarget = m_CurrentTarget.position - transform.position;
+                Vector3 toTarget = targetPos - m_Transform.position;
                 toTarget.y = 0;
                 
-                float targetDistance = toTarget.magnitude;
-                toTarget.Normalize();
+                float targetDistanceSqr = toTarget.sqrMagnitude;
+                float targetDistance = Mathf.Sqrt(targetDistanceSqr);  // Only calculate sqrt when needed
+                toTarget /= targetDistance;  // Normalize using already calculated magnitude
 
-                if (targetDistance < 3.0f)
+                if (targetDistanceSqr < CLOSE_DISTANCE_SQR)
                 {
                     m_TimeCloseToTarget += Time.deltaTime;
 
@@ -201,7 +219,7 @@ namespace Tanks.Complete
                 {
                     if (targetDistance < m_MaxShootingDistance)
                     {
-                        if (!NavMesh.Raycast(transform.position, m_CurrentTarget.position, out var hit, ~0))
+                        if (!NavMesh.Raycast(m_Transform.position, m_CurrentTarget.position, out var hit, ~0))
                         {
                             m_IsMoving = false;
 
@@ -220,10 +238,11 @@ namespace Tanks.Complete
             if(m_CurrentCorner >= m_CurrentPath.corners.Length)
                 m_CurrentState = State.Seek;
             
-            var distance = (transform.position - m_FleeingLastPosition).magnitude;
-            m_FleeingLastPosition = transform.position;
+            Vector3 currentPos = m_Transform.position;
+            float distanceSqr = (currentPos - m_FleeingLastPosition).sqrMagnitude;
+            m_FleeingLastPosition = currentPos;
 
-            if (distance < 0.001f)
+            if (distanceSqr < MOVEMENT_THRESHOLD_SQR)
             {
                 m_SinceLastFleeingMove += Time.deltaTime;
             }
@@ -240,22 +259,23 @@ namespace Tanks.Complete
 
         private void StartFleeing()
         {
-            m_FleeingLastPosition = transform.position;
+            Vector3 myPos = m_Transform.position;
+            m_FleeingLastPosition = myPos;
             m_SinceLastFleeingMove = 0.0f;
             
-            var toTarget = (m_CurrentTarget.position - transform.position).normalized;
+            var toTarget = (m_CurrentTarget.position - myPos).normalized;
             
-            toTarget = Quaternion.AngleAxis(Random.Range(90.0f, 180.0f) * Mathf.Sign(Random.Range(-1.0f, 1.0f)),
-                Vector3.up) * toTarget;
-
+            // Random angle between 90-180 degrees in random direction
+            float randomAngle = Random.Range(90.0f, 180.0f) * (Random.value > 0.5f ? 1f : -1f);
+            toTarget = Quaternion.AngleAxis(randomAngle, Vector3.up) * toTarget;
             toTarget *= Random.Range(5.0f, 20.0f);
 
-            if (NavMesh.CalculatePath(transform.position, transform.position + toTarget, NavMesh.AllAreas,
-                    m_CurrentPath))
+            // Reuse first cached path for flee calculation
+            if (NavMesh.CalculatePath(myPos, myPos + toTarget, NavMesh.AllAreas, m_CachedPaths[0]))
             {
+                m_CurrentPath = m_CachedPaths[0];
                 m_CurrentState = State.Flee;
                 m_CurrentCorner = 1;
-
                 m_IsMoving = true;
             }
         }
@@ -266,34 +286,45 @@ namespace Tanks.Complete
                 return;
             
             var rb = m_Movement.Rigidbody;
-            
-            Vector3 orientTarget = m_CurrentPath.corners[Mathf.Min(m_CurrentCorner, m_CurrentPath.corners.Length - 1)];
+            int cornerIndex = Mathf.Min(m_CurrentCorner, m_CurrentPath.corners.Length - 1);
+            Vector3 orientTarget = m_CurrentPath.corners[cornerIndex];
 
-            if (!m_IsMoving)
+            if (!m_IsMoving && m_CurrentTarget != null)
                 orientTarget = m_CurrentTarget.position;
 
-            Vector3 toOrientTarget = orientTarget - transform.position;
+            Vector3 myPos = m_Transform.position;
+            Vector3 toOrientTarget = orientTarget - myPos;
             toOrientTarget.y = 0;
-            toOrientTarget.Normalize();
+            
+            float toTargetMagnitude = toOrientTarget.magnitude;
+            if (toTargetMagnitude > 0.0001f)
+                toOrientTarget /= toTargetMagnitude;  // Normalize
 
             Vector3 forward = rb.rotation * Vector3.forward;
 
             float orientDot = Vector3.Dot(forward, toOrientTarget);
             float rotatingAngle = Vector3.SignedAngle(toOrientTarget, forward, Vector3.up);
 
-            float moveAmount = Mathf.Clamp01(orientDot) * m_Movement.m_Speed * Time.deltaTime;
-            if (m_IsMoving && moveAmount > 0.000001f)
+            if (m_IsMoving)
             {
-                // rb.MovePosition(rb.position + forward * moveAmount);
-                rb.linearVelocity = Mathf.Clamp01(orientDot) * m_Movement.m_Speed * forward + m_Movement.ExplosionForceValue;
+                float clampedDot = Mathf.Clamp01(orientDot);
+                if (clampedDot > 0.0001f)
+                {
+                    rb.linearVelocity = clampedDot * m_Movement.m_Speed * forward + m_Movement.ExplosionForceValue;
+                }
             }
 
-            rotatingAngle = Mathf.Sign(rotatingAngle) * Mathf.Min(Mathf.Abs(rotatingAngle), m_Movement.m_TurnSpeed * Time.deltaTime);
-            
-            if(Mathf.Abs(rotatingAngle) > 0.000001f)
-                rb.MoveRotation(rb.rotation * Quaternion.AngleAxis(-rotatingAngle, Vector3.up));
+            float absAngle = Mathf.Abs(rotatingAngle);
+            if (absAngle > 0.0001f)
+            {
+                float clampedAngle = Mathf.Sign(rotatingAngle) * Mathf.Min(absAngle, m_Movement.m_TurnSpeed * Time.deltaTime);
+                rb.MoveRotation(rb.rotation * Quaternion.AngleAxis(-clampedAngle, Vector3.up));
+            }
 
-            if (Vector3.Distance(rb.position, orientTarget) < 0.5f)
+            // Use sqrMagnitude for corner reach check
+            Vector3 toCorner = rb.position - orientTarget;
+            toCorner.y = 0;
+            if (toCorner.sqrMagnitude < CORNER_REACH_SQR)
             {
                 m_CurrentCorner += 1;
             }

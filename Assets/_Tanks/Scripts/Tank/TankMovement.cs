@@ -45,6 +45,10 @@ namespace Tanks.Complete
 
         private Vector3 m_RequestedDirection;       // In Direct Control mode, store the direction the user *wants* to go toward
         
+        // Cached references for optimization
+        private Transform m_CachedCameraTransform;
+        private bool m_UseDirectControl;            // Cached check for direct control mode
+        
         private void Awake ()
         {
             m_Rigidbody = GetComponent<Rigidbody> ();
@@ -141,11 +145,24 @@ namespace Tanks.Complete
             m_MoveAction.Enable();
             m_TurnAction.Enable();
             
+            // Cache camera transform for direct control calculations
+            if (Camera.main != null)
+                m_CachedCameraTransform = Camera.main.transform;
+            
+            // Cache control scheme check - will be updated if scheme changes
+            UpdateDirectControlCache();
+            
             // Store the original pitch of the audio source.
             if(m_MovementAudio)
             {
                 m_OriginalPitch = m_MovementAudio.pitch;
             }
+        }
+        
+        private void UpdateDirectControlCache()
+        {
+            var scheme = m_InputUser.InputUser.controlScheme;
+            m_UseDirectControl = m_IsDirectControl || (scheme.HasValue && scheme.Value.name == "Gamepad");
         }
 
 
@@ -198,15 +215,15 @@ namespace Tanks.Complete
             // If this is using a gamepad or have direct control enabled, this used a different movement method : instead of
             // "up" behind moving forward for the tank, it instead takes the gamepad move direction as the desired forward for the tank
             // and will compute the speed and rotation needed to move the tank toward that direction.
-            if (m_InputUser.InputUser.controlScheme.Value.name == "Gamepad" ||  m_IsDirectControl)
+            if (m_UseDirectControl && m_CachedCameraTransform != null)
             {
-                var camForward = Camera.main.transform.forward;
+                var camForward = m_CachedCameraTransform.forward;
                 camForward.y = 0;
 
                 // If camForward is zero, use camera up instead
                 if (camForward.sqrMagnitude < 0.0001f)
                 {
-                    camForward = Camera.main.transform.up;
+                    camForward = m_CachedCameraTransform.up;
                     camForward.y = 0;
                 }
 
@@ -227,10 +244,10 @@ namespace Tanks.Complete
 
         private void Move ()
         {
-            float speedInput = 0.0f;
+            float speedInput;
             
             // In direct control mode, the speed will depend on how far from the desired direction we are
-            if (m_InputUser.InputUser.controlScheme.Value.name == "Gamepad" || m_IsDirectControl)
+            if (m_UseDirectControl)
             {
                 speedInput = m_RequestedDirection.magnitude;
                 //if we are direct control, the speed of the move is based angle between current direction and the wanted
@@ -257,11 +274,11 @@ namespace Tanks.Complete
         {
             Quaternion turnRotation;
             // If in direct control...
-            if (m_InputUser.InputUser.controlScheme.Value.name == "Gamepad" || m_IsDirectControl)
+            if (m_UseDirectControl)
             {
                 // Compute the rotation needed to reach the desired direction
                 float angleTowardTarget = Vector3.SignedAngle(m_RequestedDirection, transform.forward, transform.up);
-                var rotatingAngle = Mathf.Sign(angleTowardTarget) * Mathf.Min(Mathf.Abs(angleTowardTarget), m_TurnSpeed * Time.deltaTime);
+                float rotatingAngle = Mathf.Sign(angleTowardTarget) * Mathf.Min(Mathf.Abs(angleTowardTarget), m_TurnSpeed * Time.deltaTime);
                 turnRotation = Quaternion.AngleAxis(-rotatingAngle, Vector3.up);
             }
             else

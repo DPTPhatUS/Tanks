@@ -71,18 +71,35 @@ namespace Tanks.Complete
 
         private void Update()
         {
-            if (!m_IsComputerControlled)
+            // Reset slider to base value each frame
+            m_AimSlider.value = m_BaseMinLaunchForce;
+            
+            // Update cooldown timer (only matters for human, but cheap enough to always run)
+            if (m_ShotCooldownTimer > 0.0f)
+                m_ShotCooldownTimer -= Time.deltaTime;
+            
+            // Handle max charge auto-fire (shared logic)
+            if (m_CurrentLaunchForce >= m_MaxLaunchForce && !m_Fired)
             {
-                HumanUpdate();
+                m_CurrentLaunchForce = m_MaxLaunchForce;
+                Fire();
+                return;
+            }
+            
+            if (m_IsComputerControlled)
+            {
+                UpdateComputerCharging();
             }
             else
             {
-                ComputerUpdate();
+                UpdateHumanInput();
             }
         }
 
         public void StartCharging()
         {
+            if (m_IsCharging) return; // Prevent double-charging
+            
             m_IsCharging = true;
             m_Fired = false;
             m_CurrentLaunchForce = m_MinLaunchForce;
@@ -93,63 +110,40 @@ namespace Tanks.Complete
 
         public void StopCharging()
         {
-            if (m_IsCharging)
+            if (m_IsCharging && !m_Fired)
             {
                 Fire();
                 m_IsCharging = false;
             }
         }
-
-        void ComputerUpdate()
+        
+        private void UpdateCharging()
         {
-            m_AimSlider.value = m_BaseMinLaunchForce;
+            m_CurrentLaunchForce += m_ChargeSpeed * Time.deltaTime;
+            m_AimSlider.value = m_CurrentLaunchForce;
+        }
 
-            if (m_CurrentLaunchForce >= m_MaxLaunchForce && !m_Fired)
+        private void UpdateComputerCharging()
+        {
+            if (m_IsCharging && !m_Fired)
             {
-                m_CurrentLaunchForce = m_MaxLaunchForce;
-                Fire();
-            }
-            else if (m_IsCharging && !m_Fired)
-            {
-                m_CurrentLaunchForce += m_ChargeSpeed * Time.deltaTime;
-
-                m_AimSlider.value = m_CurrentLaunchForce;
-            }
-            else if (fireAction.WasReleasedThisFrame() && !m_Fired)
-            {
-                Fire();
-                m_IsCharging = false;
+                UpdateCharging();
             }
         }
 
-        void HumanUpdate()
+        private void UpdateHumanInput()
         {
-            if (m_ShotCooldownTimer > 0.0f)
+            // Start charging on button press
+            if (m_ShotCooldownTimer <= 0 && fireAction.WasPressedThisFrame())
             {
-                m_ShotCooldownTimer -= Time.deltaTime;
+                StartCharging();
             }
-
-            m_AimSlider.value = m_BaseMinLaunchForce;
-
-            if (m_CurrentLaunchForce >= m_MaxLaunchForce && !m_Fired)
-            {
-                m_CurrentLaunchForce = m_MaxLaunchForce;
-                Fire();
-            }
-            else if (m_ShotCooldownTimer <= 0 && fireAction.WasPressedThisFrame())
-            {
-                m_Fired = false;
-                m_CurrentLaunchForce = m_MinLaunchForce;
-
-                m_ShootingAudio.clip = m_ChargingClip;
-                m_ShootingAudio.Play();
-            }
+            // Continue charging while held
             else if (fireAction.IsPressed() && !m_Fired)
             {
-                m_CurrentLaunchForce += m_ChargeSpeed * Time.deltaTime;
-
-                m_AimSlider.value = m_CurrentLaunchForce;
+                UpdateCharging();
             }
+            // Fire on release
             else if (fireAction.WasReleasedThisFrame() && !m_Fired)
             {
                 Fire();
