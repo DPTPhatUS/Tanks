@@ -50,7 +50,7 @@ namespace Tanks.Complete
 
             // Toggle computer controlled on the movement/firing if this tank was tagged as being computer controlled
             m_Movement.m_IsComputerControlled = m_ComputerControlled;
-            m_Shooting.m_IsComputerControlled = m_ComputerControlled;
+            m_Shooting.IsComputerControlled = m_ComputerControlled;
             
             // Pass along the player number and control index to the movement components. See the TankMovement script for
             // hose those are used to decided which input the movement respond to.
