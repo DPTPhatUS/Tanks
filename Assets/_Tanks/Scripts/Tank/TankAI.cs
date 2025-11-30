@@ -29,6 +29,9 @@ namespace Tanks.Complete
         [SerializeField] private float m_CloseDistanceThreshold = 3f;
         [SerializeField] private float m_FleeAfterCloseTime = 2f;
         [SerializeField] private float m_FleeAfterStationaryTime = 2f;
+        [SerializeField] private float m_MinEngagementDistance = 8f;  // Stop moving when this close to target
+        [SerializeField] private float m_MaxChargeTime = 1.5f;        // Force fire if charging too long
+        [SerializeField] private float m_AlignmentTimeout = 0.8f;     // Fire anyway if can't align in time
         
         [Header("Flee Behavior")]
         [SerializeField] private float m_MinFleeDistance = 5f;
@@ -64,6 +67,9 @@ namespace Tanks.Complete
         // Combat
         private float m_MaxShootingDistance;
         private float m_ShotCooldown;
+        private float m_ChargeTimer;           // How long we've been charging
+        private float m_AlignmentTimer;        // How long we've been trying to align
+        private float m_MinEngagementDistanceSqr;
         
         // Flee tracking
         private Vector3 m_FleeLastPosition;
@@ -132,6 +138,7 @@ namespace Tanks.Complete
             m_Rigidbody = m_Movement.Rigidbody;
             
             m_CloseDistanceSqr = m_CloseDistanceThreshold * m_CloseDistanceThreshold;
+            m_MinEngagementDistanceSqr = m_MinEngagementDistance * m_MinEngagementDistance;
         }
 
         private void ConfigureAsComputerControlled()
@@ -195,6 +202,17 @@ namespace Tanks.Complete
             if (m_ShotCooldown > 0f)
             {
                 m_ShotCooldown -= Time.deltaTime;
+            }
+            
+            // Track charging time
+            if (m_Shooting.IsCharging)
+            {
+                m_ChargeTimer += Time.deltaTime;
+            }
+            else
+            {
+                m_ChargeTimer = 0f;
+                m_AlignmentTimer = 0f;
             }
             
             m_PathfindTimer += Time.deltaTime;
@@ -347,9 +365,16 @@ namespace Tanks.Complete
             Vector3 toTarget = m_CurrentTarget.position - m_Transform.position;
             toTarget.y = 0f;
             
-            float targetDistance = toTarget.magnitude;
+            float targetDistanceSqr = toTarget.sqrMagnitude;
+            float targetDistance = Mathf.Sqrt(targetDistanceSqr);
             Vector3 directionToTarget = toTarget / targetDistance;
             float alignment = Vector3.Dot(directionToTarget, m_Transform.forward);
+            
+            // Stop moving when within engagement distance (don't ram the player)
+            if (targetDistanceSqr < m_MinEngagementDistanceSqr)
+            {
+                m_IsMoving = false;
+            }
             
             if (m_Shooting.IsCharging)
             {
@@ -363,17 +388,39 @@ namespace Tanks.Complete
 
         private void HandleCharging(float targetDistance, float alignment)
         {
+            // Stop moving while charging to aim
+            m_IsMoving = false;
+            
             Vector3 currentShotTarget = m_Shooting.GetProjectilePosition(m_Shooting.CurrentChargeRatio);
             float shotDistance = Vector3.Distance(currentShotTarget, m_Transform.position);
             
             bool inRange = shotDistance >= targetDistance - SHOT_DISTANCE_BUFFER;
             bool aligned = alignment > SHOT_ALIGNMENT_THRESHOLD;
             
-            if (inRange && aligned)
+            // Track alignment time for timeout
+            if (!aligned)
             {
-                m_IsMoving = false;
+                m_AlignmentTimer += Time.deltaTime;
+            }
+            else
+            {
+                m_AlignmentTimer = 0f;
+            }
+            
+            // Fire conditions:
+            // 1. Normal: in range and aligned
+            // 2. Charge timeout: been charging too long (max charge time)
+            // 3. Alignment timeout: can't align (player circling) - fire anyway with reduced accuracy
+            bool shouldFire = (inRange && aligned) ||
+                              (m_ChargeTimer >= m_MaxChargeTime) ||
+                              (m_AlignmentTimer >= m_AlignmentTimeout && inRange);
+            
+            if (shouldFire)
+            {
                 m_Shooting.StopCharging();
                 m_ShotCooldown = m_TimeBetweenShots;
+                m_ChargeTimer = 0f;
+                m_AlignmentTimer = 0f;
                 
                 if (m_TimeSinceTargetMoved > m_FleeAfterStationaryTime)
                 {
@@ -391,6 +438,8 @@ namespace Tanks.Complete
             if (!NavMesh.Raycast(m_Transform.position, m_CurrentTarget.position, out _, NavMesh.AllAreas))
             {
                 m_IsMoving = false;
+                m_ChargeTimer = 0f;
+                m_AlignmentTimer = 0f;
                 m_Shooting.StartCharging();
             }
         }

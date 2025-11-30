@@ -1,88 +1,118 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Tanks.Complete
 {
+    /// <summary>
+    /// Manages the visual HUD indicator for active power-ups on tanks.
+    /// </summary>
     public class PowerUpHUD : MonoBehaviour
     {
+        #region Serialized Fields
+        
         [SerializeField] private GameObject m_DamageReductionHUD;
         [SerializeField] private GameObject m_EnhancedShootingHUD;
         [SerializeField] private GameObject m_EnhancedSpeedHUD;
         [SerializeField] private GameObject m_EnhancedShellHUD;
         [SerializeField] private GameObject m_HealingHUD;
         [SerializeField] private GameObject m_TemporaryInvencibilityHUD;
+        
+        #endregion
 
+        #region Private Fields
+        
+        private Dictionary<PowerUp.PowerUpType, GameObject> m_HUDMap;
         private GameObject m_ActivePowerUpHUD;
+        private Transform m_Transform;
         private float m_DisplayTime;
-        private bool m_HasActivePowerUp = false;
+        private bool m_HasActivePowerUp;
+        private bool m_IsTimeBased;
+        
+        private const float ROTATION_SPEED = 100f;
+        
+        #endregion
+
+        #region Unity Lifecycle
+        
+        private void Awake()
+        {
+            m_Transform = transform;
+            InitializeHUDMap();
+        }
 
         private void Update()
         {
-            // Checks that there is an active power up
-            if (m_HasActivePowerUp)
+            if (!m_HasActivePowerUp) return;
+            
+            // Rotate HUD
+            m_Transform.rotation = Quaternion.Euler(0f, ROTATION_SPEED * Time.time, 0f);
+            
+            // Update timer for time-based power-ups
+            if (m_IsTimeBased)
             {
-                // Rotates the PowerUpHUD
-                transform.rotation = Quaternion.Euler(0, 100f * Time.time, 0);
-                // Checks that the power up is not time based (just EnhancedShell for now)
-                if(m_ActivePowerUpHUD != m_EnhancedShellHUD)
+                m_DisplayTime -= Time.deltaTime;
+                if (m_DisplayTime <= 0f)
                 {
-                    // If the display time hasn't run out, the time that has passed gets updated
-                    if (m_DisplayTime > 0f)
-                        m_DisplayTime -= Time.deltaTime;
-
-                    // If there is no display time left, this power up HUD gets disabled
-                    else
-                        DisableActiveHUD();
+                    DisableActiveHUD();
                 }
             }
         }
+        
+        #endregion
 
+        #region Initialization
+        
+        private void InitializeHUDMap()
+        {
+            m_HUDMap = new Dictionary<PowerUp.PowerUpType, GameObject>
+            {
+                { PowerUp.PowerUpType.DamageReduction, m_DamageReductionHUD },
+                { PowerUp.PowerUpType.ShootingBonus, m_EnhancedShootingHUD },
+                { PowerUp.PowerUpType.Speed, m_EnhancedSpeedHUD },
+                { PowerUp.PowerUpType.DamageMultiplier, m_EnhancedShellHUD },
+                { PowerUp.PowerUpType.Healing, m_HealingHUD },
+                { PowerUp.PowerUpType.Invincibility, m_TemporaryInvencibilityHUD }
+            };
+        }
+        
+        #endregion
+
+        #region Public Methods
+        
         /// <summary>
-        /// 
+        /// Activates the HUD indicator for the specified power-up type.
         /// </summary>
-        /// <param name="powerUpType">Type of the power up to activate.</param>
-        /// <param name="duration"> Time of displaying the power up HUD. This should coincide with the duration time of the power up.</param>
+        /// <param name="powerUpType">Type of the power-up to display.</param>
+        /// <param name="duration">Duration to display the HUD (0 for non-time-based like DamageMultiplier).</param>
         public void SetActivePowerUp(PowerUp.PowerUpType powerUpType, float duration)
         {
-            switch (powerUpType)
+            if (m_HUDMap.TryGetValue(powerUpType, out GameObject hud) && hud != null)
             {
-                case PowerUp.PowerUpType.DamageReduction:
-                    m_DamageReductionHUD.SetActive(true);
-                    m_ActivePowerUpHUD = m_DamageReductionHUD;
-                    break;
-                case PowerUp.PowerUpType.ShootingBonus:
-                    m_EnhancedShootingHUD.SetActive(true);
-                    m_ActivePowerUpHUD = m_EnhancedShootingHUD;
-                    break;
-                case PowerUp.PowerUpType.Speed:
-                    m_EnhancedSpeedHUD.SetActive(true);
-                    m_ActivePowerUpHUD = m_EnhancedSpeedHUD;
-                    break;
-                case PowerUp.PowerUpType.DamageMultiplier:
-                    m_EnhancedShellHUD.SetActive(true);
-                    m_ActivePowerUpHUD = m_EnhancedShellHUD;
-                    break;
-                case PowerUp.PowerUpType.Healing:
-                    m_HealingHUD.SetActive(true);
-                    m_ActivePowerUpHUD = m_HealingHUD;
-                    break;
-                case PowerUp.PowerUpType.Invincibility:
-                    m_TemporaryInvencibilityHUD.SetActive(true);
-                    m_ActivePowerUpHUD = m_TemporaryInvencibilityHUD;
-                    break;
+                hud.SetActive(true);
+                m_ActivePowerUpHUD = hud;
+                m_DisplayTime = duration;
+                m_HasActivePowerUp = true;
+                
+                // DamageMultiplier (special shell) is not time-based - it lasts until fired
+                m_IsTimeBased = powerUpType != PowerUp.PowerUpType.DamageMultiplier;
             }
-            m_DisplayTime = duration;
-            m_HasActivePowerUp = true;
         }
 
         /// <summary>
-        /// Disables the Active Power Up HUD of the Tank.
+        /// Disables the currently active power-up HUD indicator.
         /// </summary>
         public void DisableActiveHUD()
         {
-            m_ActivePowerUpHUD.SetActive(false);
-            m_ActivePowerUpHUD = null;
+            if (m_ActivePowerUpHUD != null)
+            {
+                m_ActivePowerUpHUD.SetActive(false);
+                m_ActivePowerUpHUD = null;
+            }
+            
             m_HasActivePowerUp = false;
             m_DisplayTime = 0f;
         }
+        
+        #endregion
     }
 }

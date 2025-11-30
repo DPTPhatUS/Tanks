@@ -3,120 +3,170 @@ using UnityEngine.UI;
 
 namespace Tanks.Complete
 {
+    /// <summary>
+    /// Manages tank health, damage, shields, and death effects.
+    /// </summary>
     public class TankHealth : MonoBehaviour
     {
-        public float m_StartingHealth = 100f;
-        public Slider m_Slider;
-        public Image m_FillImage;
-        public Color m_FullHealthColor = Color.green;
-        public Color m_ZeroHealthColor = Color.red;
-        public GameObject m_ExplosionPrefab;
-        [HideInInspector] public bool m_HasShield;
+        #region Serialized Fields
+        
+        [Header("Health Settings")]
+        [SerializeField] private float m_StartingHealth = 100f;
+        
+        [Header("UI References")]
+        [SerializeField] private Slider m_Slider;
+        [SerializeField] private Image m_FillImage;
+        [SerializeField] private Color m_FullHealthColor = Color.green;
+        [SerializeField] private Color m_ZeroHealthColor = Color.red;
+        
+        [Header("Death Effects")]
+        [SerializeField] private GameObject m_ExplosionPrefab;
+        
+        #endregion
 
-        private AudioSource m_ExplosionAudio;
+        #region Public Properties
+        
+        // Legacy accessors for backwards compatibility
+        public float m_StartingHealth_Accessor => m_StartingHealth;
+        public bool m_HasShield { get; private set; }
+        
+        #endregion
+
+        #region Private Fields
+        
         private ParticleSystem m_ExplosionParticles;
+        private AudioSource m_ExplosionAudio;
         private float m_CurrentHealth;
-        private bool m_Dead;
+        private float m_InverseStartingHealth;  // Cached for color lerp optimization
         private float m_ShieldValue;
+        private bool m_IsDead;
         private bool m_IsInvincible;
+        
+        #endregion
 
+        #region Unity Lifecycle
+        
         private void Awake()
         {
-            m_ExplosionParticles = Instantiate(m_ExplosionPrefab).GetComponent<ParticleSystem>();
-            m_ExplosionParticles.gameObject.SetActive(false);
-
-            m_ExplosionAudio = m_ExplosionParticles.GetComponent<AudioSource>();
-
-            m_Slider.maxValue = m_StartingHealth;
+            CreateExplosionInstance();
+            InitializeSlider();
+            m_InverseStartingHealth = 1f / m_StartingHealth;
         }
 
         private void OnDestroy()
         {
             if (m_ExplosionParticles != null)
+            {
                 Destroy(m_ExplosionParticles.gameObject);
+            }
         }
 
         private void OnEnable()
         {
-            m_CurrentHealth = m_StartingHealth;
-            m_Dead = false;
-            m_HasShield = false;
-            m_ShieldValue = 0;
-            m_IsInvincible = false;
+            ResetState();
+        }
+        
+        #endregion
 
-            SetHealthUI();
+        #region Initialization
+        
+        private void CreateExplosionInstance()
+        {
+            GameObject explosionInstance = Instantiate(m_ExplosionPrefab);
+            m_ExplosionParticles = explosionInstance.GetComponent<ParticleSystem>();
+            m_ExplosionAudio = explosionInstance.GetComponent<AudioSource>();
+            explosionInstance.SetActive(false);
         }
 
-
-        public void TakeDamage(float amount)
+        private void InitializeSlider()
         {
-            if (!m_IsInvincible)
+            if (m_Slider != null)
             {
-                m_CurrentHealth -= amount * (1 - m_ShieldValue);
-
-                SetHealthUI();
-
-                if (m_CurrentHealth <= 0f && !m_Dead)
-                {
-                    OnDeath();
-                }
+                m_Slider.maxValue = m_StartingHealth;
             }
         }
 
+        private void ResetState()
+        {
+            m_CurrentHealth = m_StartingHealth;
+            m_IsDead = false;
+            m_HasShield = false;
+            m_ShieldValue = 0f;
+            m_IsInvincible = false;
+            UpdateHealthUI();
+        }
+        
+        #endregion
+
+        #region Damage & Healing
+        
+        public void TakeDamage(float amount)
+        {
+            if (m_IsInvincible || m_IsDead) return;
+            
+            float effectiveDamage = amount * (1f - m_ShieldValue);
+            m_CurrentHealth -= effectiveDamage;
+            
+            UpdateHealthUI();
+            
+            if (m_CurrentHealth <= 0f)
+            {
+                OnDeath();
+            }
+        }
 
         public void IncreaseHealth(float amount)
         {
-            if (m_CurrentHealth + amount <= m_StartingHealth)
-            {
-                m_CurrentHealth += amount;
-            }
-            else
-            {
-                m_CurrentHealth = m_StartingHealth;
-            }
-
-            SetHealthUI();
+            m_CurrentHealth = Mathf.Min(m_CurrentHealth + amount, m_StartingHealth);
+            UpdateHealthUI();
         }
+        
+        #endregion
 
-
+        #region Buffs
+        
         public void ToggleShield(float shieldAmount)
         {
             m_HasShield = !m_HasShield;
-
-            if (m_HasShield)
-            {
-                m_ShieldValue = shieldAmount;
-            }
-            else
-            {
-                m_ShieldValue = 0;
-            }
+            m_ShieldValue = m_HasShield ? shieldAmount : 0f;
         }
 
         public void ToggleInvincibility()
         {
             m_IsInvincible = !m_IsInvincible;
         }
+        
+        #endregion
 
-
-        private void SetHealthUI()
+        #region UI
+        
+        private void UpdateHealthUI()
         {
+            if (m_Slider == null) return;
+            
             m_Slider.value = m_CurrentHealth;
-            m_FillImage.color = Color.Lerp(m_ZeroHealthColor, m_FullHealthColor, m_CurrentHealth / m_StartingHealth);
+            
+            float healthPercent = m_CurrentHealth * m_InverseStartingHealth;
+            m_FillImage.color = Color.Lerp(m_ZeroHealthColor, m_FullHealthColor, healthPercent);
         }
+        
+        #endregion
 
-
+        #region Death
+        
         private void OnDeath()
         {
-            m_Dead = true;
-
+            m_IsDead = true;
+            
+            // Play explosion effects
             m_ExplosionParticles.transform.position = transform.position;
             m_ExplosionParticles.gameObject.SetActive(true);
             m_ExplosionParticles.Play();
-
             m_ExplosionAudio.Play();
-
+            
             gameObject.SetActive(false);
         }
+        
+        #endregion
     }
 }

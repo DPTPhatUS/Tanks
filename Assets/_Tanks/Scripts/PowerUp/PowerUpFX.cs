@@ -2,24 +2,23 @@ using UnityEngine;
 
 namespace Tanks.Complete
 {
+    /// <summary>
+    /// Handles power-up collection visual and audio effects.
+    /// </summary>
     public class PowerUpFX : MonoBehaviour
     {
-        private AudioSource m_PowerUpAudioSource;       // Reference to the AudioSource component
-        private float lifeTime = 3f;                    // Time in seconds that this GameObject will be in scene before being destroyed
+        [SerializeField] private float m_LifeTime = 3f;
 
         private void Start()
         {
-            m_PowerUpAudioSource = GetComponent<AudioSource>();
-            m_PowerUpAudioSource.PlayDelayed(0);
+            // Play audio and schedule destruction
+            AudioSource audioSource = GetComponent<AudioSource>();
+            if (audioSource != null)
+            {
+                audioSource.Play();
+            }
+            
+            Destroy(gameObject, m_LifeTime);
         }
-
-        private void Update()
-        {
-            // Reduces its lifetime to know when to destroy this effect
-            lifeTime -= Time.deltaTime;
-            if (lifeTime <= 0.0f)
-                Destroy(gameObject);
-        }
-
     }
 }

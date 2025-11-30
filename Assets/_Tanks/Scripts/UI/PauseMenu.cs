@@ -4,19 +4,63 @@ using UnityEngine.UI;
 
 namespace Tanks.Complete
 {
+    /// <summary>
+    /// Manages the pause menu UI and game pause state.
+    /// </summary>
     public class PauseMenu : MonoBehaviour
     {
-        public RectTransform m_PauseMenuRoot;
-        public RectTransform m_PauseMenuButtonsRoot;
-        public Button m_ControlScreenButton;
+        #region Serialized Fields
+        
+        [Header("Pause Menu")]
+        [SerializeField] private RectTransform m_PauseMenuRoot;
+        [SerializeField] private RectTransform m_PauseMenuButtonsRoot;
+        [SerializeField] private Button m_ControlScreenButton;
 
-        public RectTransform m_ControlMenuRoot;
-        public Button m_ControlMenuBackButton;
+        [Header("Control Menu")]
+        [SerializeField] private RectTransform m_ControlMenuRoot;
+        [SerializeField] private Button m_ControlMenuBackButton;
 
-        public Button m_SelectTankButton;
-        public Button m_QuitButton;
+        [Header("Actions")]
+        [SerializeField] private Button m_SelectTankButton;
+        [SerializeField] private Button m_QuitButton;
+        
+        #endregion
 
+        #region Private Fields
+        
+        private bool m_IsPaused;
+        
+        #endregion
+
+        #region Public Methods
+        
         public void Init()
+        {
+            SetupControlMenuNavigation();
+            SetupActionButtons();
+            
+            m_PauseMenuRoot.gameObject.SetActive(false);
+            m_PauseMenuButtonsRoot.gameObject.SetActive(true);
+        }
+    
+        public void TogglePause()
+        {
+            if (m_PauseMenuRoot == null) return;
+            
+            m_IsPaused = !m_IsPaused;
+            m_PauseMenuRoot.gameObject.SetActive(m_IsPaused);
+            Time.timeScale = m_IsPaused ? 0f : 1f;
+
+            // Reset to main pause menu view
+            m_ControlMenuRoot.gameObject.SetActive(false);
+            m_PauseMenuButtonsRoot.gameObject.SetActive(true);
+        }
+        
+        #endregion
+
+        #region Private Methods
+        
+        private void SetupControlMenuNavigation()
         {
             m_ControlMenuBackButton.onClick.AddListener(() =>
             {
@@ -31,39 +75,26 @@ namespace Tanks.Complete
                 m_ControlMenuRoot.gameObject.SetActive(true);
                 m_PauseMenuButtonsRoot.gameObject.SetActive(false);
             });
+        }
 
+        private void SetupActionButtons()
+        {
             m_SelectTankButton.onClick.AddListener(() =>
             {
-                Time.timeScale = 1.0f;
+                Time.timeScale = 1f;
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             });
 
-            if (Application.platform == RuntimePlatform.WebGLPlayer || Application.isEditor)
+            // Hide quit button on WebGL and in editor
+            bool showQuitButton = Application.platform != RuntimePlatform.WebGLPlayer && !Application.isEditor;
+            m_QuitButton.gameObject.SetActive(showQuitButton);
+            
+            if (showQuitButton)
             {
-                m_QuitButton.gameObject.SetActive(false);
-            }
-            else
-            {
-                m_QuitButton.gameObject.SetActive(true);
                 m_QuitButton.onClick.AddListener(Application.Quit);
             }
-
-            m_PauseMenuRoot.gameObject.SetActive(false);
-            m_PauseMenuButtonsRoot.gameObject.SetActive(true);
         }
-    
-        public void TogglePause()
-        {
-            if (m_PauseMenuRoot != null)
-            {
-                bool state = !m_PauseMenuRoot.gameObject.activeSelf;
-                m_PauseMenuRoot.gameObject.SetActive(state);
-
-                Time.timeScale = state ? 0.0f : 1.0f;
-
-                m_ControlMenuRoot.gameObject.SetActive(false);
-                m_PauseMenuButtonsRoot.gameObject.SetActive(true);
-            }
-        }
+        
+        #endregion
     }
 }

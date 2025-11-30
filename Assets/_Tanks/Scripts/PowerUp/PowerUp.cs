@@ -2,95 +2,140 @@ using UnityEngine;
 
 namespace Tanks.Complete
 {
+    /// <summary>
+    /// Represents a collectible power-up that grants various effects to tanks.
+    /// </summary>
     public class PowerUp : MonoBehaviour
     {
-        public enum PowerUpType { Speed, DamageReduction, ShootingBonus, Healing, Invincibility, DamageMultiplier }
-        [Tooltip("Select the kind of Power Up that you want.")]
-        [SerializeField] private PowerUpType m_PowerUpType = PowerUpType.DamageReduction;
+        #region Types
+        
+        public enum PowerUpType
+        {
+            Speed,
+            DamageReduction,
+            ShootingBonus,
+            Healing,
+            Invincibility,
+            DamageMultiplier
+        }
+        
+        #endregion
 
-        [Tooltip("Particle to emit when this Power Up is collected.")]
+        #region Serialized Fields
+        
+        [Header("General Settings")]
+        [SerializeField] private PowerUpType m_PowerUpType = PowerUpType.DamageReduction;
         [SerializeField] private ParticleSystem m_CollectFX;
-        [Tooltip("Time in seconds that this Power Up will be active.")]
         [SerializeField] private float m_DurationTime = 5f;
 
         [Header("Damage Reduction")]
-        [Tooltip("Percentage of damage reduction [0 , 1].")]
-        [SerializeField] private float m_DamageReduction = 0.5f;
+        [SerializeField, Range(0f, 1f)] private float m_DamageReduction = 0.5f;
 
         [Header("Speed Bonus")]
-        [Tooltip("Extra speed value of the tank.")]
         [SerializeField] private float m_SpeedBonus = 5f;
-        [Tooltip("Extra turn speed value of the tank.")]
         [SerializeField] private float m_TurnSpeedBonus = 0f;
 
         [Header("Shooting Bonus")]
-        [Tooltip("Percentage of reduction in the cooldown shooting time (0 , 1].")]
-        [SerializeField] private float m_CooldownReduction = 0.5f;
+        [SerializeField, Range(0f, 1f)] private float m_CooldownReduction = 0.5f;
 
         [Header("Healing")]
-        [Tooltip("Life that will recover the tank.")]
         [SerializeField] private float m_HealingAmount = 20f;
 
         [Header("Extra Damage")]
-        [Tooltip("Amount by which the damage will be multiplied.")]
         [SerializeField] private float m_DamageMultiplier = 2f;
+        
+        #endregion
 
-        private PowerUpSpawner m_Spawner;               // Reference to the spawner that instantiated this PowerUp
+        #region Private Fields
+        
+        private PowerUpSpawner m_Spawner;
+        private Transform m_Transform;
+        private int m_PlayerLayer;
+        
+        private const float ROTATION_SPEED = 50f;
+        
+        #endregion
+
+        #region Unity Lifecycle
+        
+        private void Awake()
+        {
+            m_Transform = transform;
+            m_PlayerLayer = LayerMask.NameToLayer("Players");
+        }
 
         private void Update()
         {
-            // Rotates the power up game object
-            transform.rotation = Quaternion.Euler(0, 50f * Time.time, 0);
+            // Rotate power-up for visual effect
+            m_Transform.rotation = Quaternion.Euler(0f, ROTATION_SPEED * Time.time, 0f);
         }
-
 
         private void OnTriggerEnter(Collider other)
         {
-            if (other.gameObject.layer == LayerMask.NameToLayer("Players"))
+            if (other.gameObject.layer != m_PlayerLayer) return;
+            
+            PowerUpDetector detector = other.GetComponent<PowerUpDetector>();
+            if (detector == null || detector.m_HasActivePowerUp) return;
+            
+            ApplyPowerUp(detector);
+            OnCollected();
+        }
+        
+        #endregion
+
+        #region Power-Up Logic
+        
+        private void ApplyPowerUp(PowerUpDetector detector)
+        {
+            switch (m_PowerUpType)
             {
-                // Reference to the PowerUpDetector component of the tank.
-                PowerUpDetector m_PowerUpDetector = other.gameObject.GetComponent<PowerUpDetector>();
-
-                // Checks that the tank has not picked up other power up
-                if (!m_PowerUpDetector.m_HasActivePowerUp)
-                {
-                    // The power up reduces is a shield
-                    if (m_PowerUpType == PowerUpType.DamageReduction)
-                        m_PowerUpDetector.PickUpShield(m_DamageReduction, m_DurationTime);
-                    // The power up enhances any speed stat
-                    else if (m_PowerUpType == PowerUpType.Speed)
-                        m_PowerUpDetector.PowerUpSpeed(m_SpeedBonus, m_TurnSpeedBonus, m_DurationTime);
-                    // The power up enhances any shooting stat
-                    else if (m_PowerUpType == PowerUpType.ShootingBonus)
-                        m_PowerUpDetector.PowerUpShoootingRate(m_CooldownReduction, m_DurationTime);
-                    // The power up heals the tank
-                    else if (m_PowerUpType == PowerUpType.Healing)
-                        m_PowerUpDetector.PowerUpHealing(m_HealingAmount);
-                    // The power up makes the tank invincible
-                    else if (m_PowerUpType == PowerUpType.Invincibility)
-                        m_PowerUpDetector.PowerUpInvincibility(m_DurationTime);
-                    // The power up increases the damage of the shell
-                    else if (m_PowerUpType == PowerUpType.DamageMultiplier)
-                        m_PowerUpDetector.PowerUpSpecialShell(m_DamageMultiplier);
-
-                    // Tells the spawner that the power up has been collected
-                    if (m_Spawner != null)
-                        m_Spawner.CollectPowerUp();
-
-                    // Instantiates the PowerUp weffects
-                    if (m_CollectFX != null)
-                        Instantiate(m_CollectFX, transform.position, Quaternion.identity);
-
-                    // Destroys the Power Up
-                    Destroy(gameObject);
-                }
+                case PowerUpType.DamageReduction:
+                    detector.PickUpShield(m_DamageReduction, m_DurationTime);
+                    break;
+                case PowerUpType.Speed:
+                    detector.PowerUpSpeed(m_SpeedBonus, m_TurnSpeedBonus, m_DurationTime);
+                    break;
+                case PowerUpType.ShootingBonus:
+                    detector.PowerUpShoootingRate(m_CooldownReduction, m_DurationTime);
+                    break;
+                case PowerUpType.Healing:
+                    detector.PowerUpHealing(m_HealingAmount);
+                    break;
+                case PowerUpType.Invincibility:
+                    detector.PowerUpInvincibility(m_DurationTime);
+                    break;
+                case PowerUpType.DamageMultiplier:
+                    detector.PowerUpSpecialShell(m_DamageMultiplier);
+                    break;
             }
         }
 
-        // Sets m_Spawner
+        private void OnCollected()
+        {
+            // Notify spawner
+            if (m_Spawner != null)
+            {
+                m_Spawner.CollectPowerUp();
+            }
+            
+            // Spawn collection effects
+            if (m_CollectFX != null)
+            {
+                Instantiate(m_CollectFX, m_Transform.position, Quaternion.identity);
+            }
+            
+            Destroy(gameObject);
+        }
+        
+        #endregion
+
+        #region Public Methods
+        
         public void SetSpawner(PowerUpSpawner spawner)
         {
             m_Spawner = spawner;
         }
+        
+        #endregion
     }
 }
