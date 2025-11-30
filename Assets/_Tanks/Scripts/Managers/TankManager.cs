@@ -40,6 +40,7 @@ namespace Tanks.Complete
         private GameObject m_CanvasGameObject;
         private TankAI m_AI;
         private InputUser m_InputUser;
+        private MaterialPropertyBlock m_MaterialPropertyBlock;
         
         private const string TANK_COLOR_MATERIAL_NAME = "TankColor";
         
@@ -139,26 +140,24 @@ namespace Tanks.Complete
             MeshRenderer[] renderers = m_Instance.GetComponentsInChildren<MeshRenderer>();
             int rendererCount = renderers.Length;
 
+            if (m_MaterialPropertyBlock == null)
+                m_MaterialPropertyBlock = new MaterialPropertyBlock();
+
             for (int i = 0; i < rendererCount; i++)
             {
                 var renderer = renderers[i];
-                Material[] materials = renderer.materials;
+                Material[] materials = renderer.sharedMaterials;
                 int materialCount = materials.Length;
-                bool materialChanged = false;
                 
                 for (int j = 0; j < materialCount; j++)
                 {
                     if (materials[j].name.Contains(TANK_COLOR_MATERIAL_NAME))
                     {
-                        materials[j].color = m_PlayerColor;
-                        materialChanged = true;
+                        m_MaterialPropertyBlock.Clear();
+                        m_MaterialPropertyBlock.SetColor("_BaseColor", m_PlayerColor);
+                        m_MaterialPropertyBlock.SetColor("_Color", m_PlayerColor);
+                        renderer.SetPropertyBlock(m_MaterialPropertyBlock, j);
                     }
-                }
-                
-                // Only reassign if we changed something (optimization)
-                if (materialChanged)
-                {
-                    renderer.materials = materials;
                 }
             }
         }

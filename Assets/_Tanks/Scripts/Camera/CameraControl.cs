@@ -32,7 +32,6 @@ namespace Tanks.Complete
         private Vector3 m_MoveVelocity;
         private Vector3 m_DesiredPosition;
         private Vector3 m_AimToRig;
-        private float m_CachedAspect;
         
         #endregion
 
@@ -61,7 +60,6 @@ namespace Tanks.Complete
             m_Transform = transform;
             m_Camera = GetComponentInChildren<Camera>();
             m_CameraTransform = m_Camera.transform;
-            m_CachedAspect = m_Camera.aspect;
         }
 
         private void CalculateAimOffset()
@@ -126,6 +124,7 @@ namespace Tanks.Complete
             Vector3 desiredLocalPos = m_CameraTransform.InverseTransformPoint(m_DesiredPosition);
             float size = 0f;
             int targetCount = m_Targets.Length;
+            float currentAspect = m_Camera.aspect;
 
             for (int i = 0; i < targetCount; i++)
             {
@@ -137,7 +136,7 @@ namespace Tanks.Complete
                 Vector3 offset = targetLocalPos - desiredLocalPos;
 
                 float verticalSize = Mathf.Abs(offset.y);
-                float horizontalSize = Mathf.Abs(offset.x) / m_CachedAspect;
+                float horizontalSize = Mathf.Abs(offset.x) / currentAspect;
                 
                 size = Mathf.Max(size, verticalSize, horizontalSize);
             }

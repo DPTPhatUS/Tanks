@@ -144,7 +144,10 @@ namespace Tanks.Complete
         {
             if (m_Slider == null) return;
             
-            m_Slider.value = m_CurrentHealth;
+            if (Mathf.Abs(m_Slider.value - m_CurrentHealth) > 0.01f)
+            {
+                m_Slider.value = m_CurrentHealth;
+            }
             
             float healthPercent = m_CurrentHealth * m_InverseStartingHealth;
             m_FillImage.color = Color.Lerp(m_ZeroHealthColor, m_FullHealthColor, healthPercent);

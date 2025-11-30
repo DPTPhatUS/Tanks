@@ -44,6 +44,7 @@ namespace Tanks.Complete
         
         private Camera m_MenuCamera;
         private Transform m_TankPreviewTransform;
+        private MaterialPropertyBlock m_MaterialPropertyBlock;
         
         private const float PREVIEW_ROTATION_SPEED = 45f;
         private const float PREVIEW_DEPTH_OFFSET = 3f;
@@ -170,25 +171,24 @@ namespace Tanks.Complete
             MeshRenderer[] renderers = TankPreview.GetComponentsInChildren<MeshRenderer>();
             int rendererCount = renderers.Length;
             
+            if (m_MaterialPropertyBlock == null)
+                m_MaterialPropertyBlock = new MaterialPropertyBlock();
+
             for (int i = 0; i < rendererCount; i++)
             {
                 var renderer = renderers[i];
-                Material[] materials = renderer.materials;
+                Material[] materials = renderer.sharedMaterials;
                 int materialCount = materials.Length;
-                bool materialChanged = false;
                 
                 for (int j = 0; j < materialCount; j++)
                 {
                     if (materials[j].name.Contains(TANK_COLOR_MATERIAL_NAME))
                     {
-                        materials[j].color = m_SlotColor;
-                        materialChanged = true;
+                        m_MaterialPropertyBlock.Clear();
+                        m_MaterialPropertyBlock.SetColor("_BaseColor", m_SlotColor);
+                        m_MaterialPropertyBlock.SetColor("_Color", m_SlotColor);
+                        renderer.SetPropertyBlock(m_MaterialPropertyBlock, j);
                     }
-                }
-                
-                if (materialChanged)
-                {
-                    renderer.materials = materials;
                 }
             }
         }

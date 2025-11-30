@@ -169,7 +169,11 @@ namespace Tanks.Complete
         {
             if (m_AimSlider != null)
             {
-                m_AimSlider.value = m_IsCharging ? m_CurrentLaunchForce : m_BaseMinLaunchForce;
+                float newValue = m_IsCharging ? m_CurrentLaunchForce : m_BaseMinLaunchForce;
+                if (Mathf.Abs(m_AimSlider.value - newValue) > 0.01f)
+                {
+                    m_AimSlider.value = newValue;
+                }
             }
         }
 
