@@ -1,13 +1,12 @@
 {
   "dependencies": {
     "com.coplaydev.unity-mcp": {
-      "version": "https://github.com/DPTPhatUS/unity-mcp.git?path=/MCPForUnity#bugfix/linux-terminal-command-quoting",
+      "version": "file:/home/dptphat/dev/game/unity-mcp/MCPForUnity",
       "depth": 0,
-      "source": "git",
+      "source": "local",
       "dependencies": {
         "com.unity.nuget.newtonsoft-json": "3.0.2"
-      },
-      "hash": "51262f80800188d203f44e4778dee37c6f275d4b"
+      }
     },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
