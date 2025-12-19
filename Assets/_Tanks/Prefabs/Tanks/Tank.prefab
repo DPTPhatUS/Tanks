@@ -530,6 +530,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Tanks.Complete.TankMovement
   m_PlayerNumber: 1
+  m_IsComputerControlled: 0
   m_Speed: 12
   m_TurnSpeed: 180
   m_IsDirectControl: 0
@@ -537,7 +538,6 @@ MonoBehaviour:
   m_EngineIdling: {fileID: 8300000, guid: 4932ab25b84dd7649b80af68a9660ddc, type: 3}
   m_EngineDriving: {fileID: 8300000, guid: d7ca9fb5aa30155449192b23d7fb3336, type: 3}
   m_PitchRange: 0.2
-  m_IsComputerControlled: 0
   m_InputUser: {fileID: 0}
 --- !u!114 &6372014792694087728
 MonoBehaviour:
@@ -553,10 +553,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Tanks.Complete.TankShooting
   m_Shell: {fileID: 5409530, guid: 008ecb1b70bec724fa2cd34255b0d8f8, type: 3}
   m_FireTransform: {fileID: 410231831695351959}
-  m_AimSlider: {fileID: 5785466139121133370}
-  m_ShootingAudio: {fileID: 3608778885997148899}
-  m_ChargingClip: {fileID: 8300000, guid: c17f124fcdc0f5446a72f793898bd74b, type: 3}
-  m_FireClip: {fileID: 8300000, guid: 672a9941361ad494a99fba36759eca80, type: 3}
   m_MinLaunchForce: 5
   m_MaxLaunchForce: 20
   m_MaxChargeTime: 0.75
@@ -564,6 +560,10 @@ MonoBehaviour:
   m_MaxDamage: 100
   m_ExplosionForce: 50
   m_ExplosionRadius: 5
+  m_AimSlider: {fileID: 5785466139121133370}
+  m_ShootingAudio: {fileID: 3608778885997148899}
+  m_ChargingClip: {fileID: 8300000, guid: c17f124fcdc0f5446a72f793898bd74b, type: 3}
+  m_FireClip: {fileID: 8300000, guid: 672a9941361ad494a99fba36759eca80, type: 3}
   m_InputUser: {fileID: 0}
 --- !u!114 &6475995587427518002
 MonoBehaviour:
@@ -583,7 +583,6 @@ MonoBehaviour:
   m_FullHealthColor: {r: 0, g: 1, b: 0, a: 1}
   m_ZeroHealthColor: {r: 1, g: 0, b: 0, a: 1}
   m_ExplosionPrefab: {fileID: 151086, guid: 6bc6d0dd8b8428e4ca316513f2cf13c6, type: 3}
-  m_HasShield: 0
 --- !u!114 &8183917845854667691
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -596,7 +595,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 613fdb3d456dfe940b92c5fe402374b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Tanks.Complete.PowerUpDetector
-  m_HasActivePowerUp: 0
 --- !u!1 &7794939217129778756
 GameObject:
   m_ObjectHideFlags: 0
@@ -816,15 +814,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 384234352903047431, guid: 54fa582ae599bb64dbdace48e15b1a83, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.38739
-      objectReference: {fileID: 0}
-    - target: {fileID: 384234352903047431, guid: 54fa582ae599bb64dbdace48e15b1a83, type: 3}
-      propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 384234352903047431, guid: 54fa582ae599bb64dbdace48e15b1a83, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 384234352903047431, guid: 54fa582ae599bb64dbdace48e15b1a83, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 3.35752
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 384234352903047431, guid: 54fa582ae599bb64dbdace48e15b1a83, type: 3}
       propertyPath: m_LocalRotation.w
@@ -832,15 +830,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 384234352903047431, guid: 54fa582ae599bb64dbdace48e15b1a83, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 384234352903047431, guid: 54fa582ae599bb64dbdace48e15b1a83, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 384234352903047431, guid: 54fa582ae599bb64dbdace48e15b1a83, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 384234352903047431, guid: 54fa582ae599bb64dbdace48e15b1a83, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
