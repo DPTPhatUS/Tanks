@@ -2,8 +2,8 @@ behaviors:
   SphereRoll:
     trainer_type: ppo
     hyperparameters:
-      batch_size: 512
-      buffer_size: 2048
+      batch_size: 16
+      buffer_size: 256
       learning_rate: 3.0e-4
       beta: 5.0e-4
       epsilon: 0.2
@@ -20,6 +20,6 @@ behaviors:
       extrinsic:
         gamma: 0.99
         strength: 1.0
-    max_steps: 200000
+    max_steps: 300000
     time_horizon: 64
     summary_freq: 10000

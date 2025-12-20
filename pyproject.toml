@@ -3,7 +3,8 @@ name = "tanks"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10.12"
 dependencies = [
-    "mlagents>=0.30.0",
+    "mlagents==1.1.0",
+    "torch==2.8.0",
 ]
