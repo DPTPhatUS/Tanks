@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace Tanks.Complete
@@ -29,6 +30,13 @@ namespace Tanks.Complete
         // Legacy accessors for backwards compatibility
         public float m_StartingHealth_Accessor => m_StartingHealth;
         public bool m_HasShield { get; private set; }
+        public float CurrentHealth => m_CurrentHealth;
+        public float StartingHealth => m_StartingHealth;
+        public float HealthRatio => m_StartingHealth > 0.001f ? Mathf.Clamp01(m_CurrentHealth / m_StartingHealth) : 0f;
+        public bool IsDead => m_IsDead;
+
+        public event Action<float, float> Damaged;
+        public event Action Died;
         
         #endregion
 
@@ -106,6 +114,7 @@ namespace Tanks.Complete
             
             float effectiveDamage = amount * (1f - m_ShieldValue);
             m_CurrentHealth -= effectiveDamage;
+            Damaged?.Invoke(effectiveDamage, m_CurrentHealth);
             
             UpdateHealthUI();
             
@@ -160,6 +169,7 @@ namespace Tanks.Complete
         private void OnDeath()
         {
             m_IsDead = true;
+            Died?.Invoke();
             
             // Play explosion effects
             m_ExplosionParticles.transform.position = transform.position;

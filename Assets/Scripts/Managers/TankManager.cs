@@ -39,6 +39,7 @@ namespace Tanks.Complete
         private TankShooting m_Shooting;
         private GameObject m_CanvasGameObject;
         private TankAI m_AI;
+        private TankAgent m_MLAgent;
         private InputUser m_InputUser;
         private MaterialPropertyBlock m_MaterialPropertyBlock;
         
@@ -68,6 +69,11 @@ namespace Tanks.Complete
                 m_AI.enabled = false;
             }
 
+            if (m_ComputerControlled && m_MLAgent != null)
+            {
+                m_MLAgent.enabled = false;
+            }
+
             m_CanvasGameObject.SetActive(false);
         }
 
@@ -79,6 +85,11 @@ namespace Tanks.Complete
             if (m_ComputerControlled && m_AI != null)
             {
                 m_AI.enabled = true;
+            }
+
+            if (m_ComputerControlled && m_MLAgent != null)
+            {
+                m_MLAgent.enabled = true;
             }
 
             m_CanvasGameObject.SetActive(true);
@@ -103,6 +114,7 @@ namespace Tanks.Complete
             m_Movement = m_Instance.GetComponent<TankMovement>();
             m_Shooting = m_Instance.GetComponent<TankShooting>();
             m_AI = m_Instance.GetComponent<TankAI>();
+            m_MLAgent = m_Instance.GetComponent<TankAgent>();
             m_CanvasGameObject = m_Instance.GetComponentInChildren<Canvas>().gameObject;
         }
 
@@ -124,6 +136,19 @@ namespace Tanks.Complete
         {
             if (m_ComputerControlled)
             {
+                if (m_MLAgent != null)
+                {
+                    if (m_AI != null)
+                    {
+                        UnityEngine.Object.Destroy(m_AI);
+                        m_AI = null;
+                    }
+
+                    m_MLAgent.Setup(manager);
+                    m_MLAgent.enabled = true;
+                    return;
+                }
+
                 m_AI = m_Instance.AddComponent<TankAI>();
                 m_AI.Setup(manager);
             }

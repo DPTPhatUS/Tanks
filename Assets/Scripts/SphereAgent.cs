@@ -34,10 +34,10 @@ public class SphereAgent : Agent
 
     public override void CollectObservations(VectorSensor sensor)
     {
-        sensor.AddObservation(m_Target.localPosition);
-        sensor.AddObservation(transform.localPosition);
         sensor.AddObservation(m_Rigidbody.linearVelocity.x);
         sensor.AddObservation(m_Rigidbody.linearVelocity.z);
+        sensor.AddObservation(m_Target.localPosition);
+        sensor.AddObservation(transform.localPosition);
     }
 
     public override void OnActionReceived(ActionBuffers actions)
@@ -50,7 +50,7 @@ public class SphereAgent : Agent
         float distance = Vector3.Distance(transform.localPosition, m_Target.localPosition);
         if (distance < 2.0f)
         {
-            SetReward(1.0f);
+            AddReward(1.0f);
             EndEpisode();
         }
         else if (transform.localPosition.y < 0)
